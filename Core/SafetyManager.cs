@@ -69,6 +69,9 @@ public class SafetyManager
         if (!_config.Settings.KeyboardModuleEnabled)
             return (false, "Keyboard module is disabled.");
 
+        if (!sequence.Enabled)
+            return (false, $"Sequence '{sequence.Name}' is disabled.");
+
         var (valid, err) = ValidateSequence(sequence);
         if (!valid)
             return (false, err);

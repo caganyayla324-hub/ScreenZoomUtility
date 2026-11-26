@@ -57,26 +57,44 @@ public partial class ProfilesView : UserControl
     private void OnDuplicateProfileClick(object sender, RoutedEventArgs e)
     {
         if (_selected == null) return;
+
+        var seqIdMap = new Dictionary<string, string>();
+        var clonedSequences = new List<KeyboardSequence>();
+        foreach (var seq in _selected.Sequences)
+        {
+            var cloned = seq.Clone(seq.Name);
+            seqIdMap[seq.Id] = cloned.Id;
+            clonedSequences.Add(cloned);
+        }
+
+        var clonedHotkeys = _selected.Hotkeys.Select(h =>
+        {
+            var mappedSeqId = h.TargetSequenceId != null && seqIdMap.TryGetValue(h.TargetSequenceId, out var newSeqId)
+                ? newSeqId
+                : h.TargetSequenceId;
+            return new HotkeyBinding
+            {
+                Id = mappedSeqId != null ? $"seq.{mappedSeqId}" : h.Id,
+                ActionName = h.ActionName,
+                Category = h.Category,
+                Ctrl = h.Ctrl,
+                Alt = h.Alt,
+                Shift = h.Shift,
+                Win = h.Win,
+                VirtualKey = h.VirtualKey,
+                KeyDisplay = h.KeyDisplay,
+                Enabled = h.Enabled,
+                TargetSequenceId = mappedSeqId
+            };
+        }).ToList();
+
         var copy = new UtilityProfile
         {
             Name = $"{_selected.Name} (Copy)",
             Description = _selected.Description,
-            Zoom = new ZoomSettings
-            {
-                Enabled = _selected.Zoom.Enabled,
-                DefaultMultiplier = _selected.Zoom.DefaultMultiplier,
-                MinMultiplier = _selected.Zoom.MinMultiplier,
-                MaxMultiplier = _selected.Zoom.MaxMultiplier,
-                StepSize = _selected.Zoom.StepSize,
-                PositionMode = _selected.Zoom.PositionMode,
-                ScalingQuality = _selected.Zoom.ScalingQuality,
-                SmoothingFactor = _selected.Zoom.SmoothingFactor,
-                ManualX = _selected.Zoom.ManualX,
-                ManualY = _selected.Zoom.ManualY,
-                ClampToScreenEdges = _selected.Zoom.ClampToScreenEdges
-            },
-            Sequences = _selected.Sequences.Select(s => s.Clone(s.Name)).ToList(),
-            Hotkeys = AppSettings.CreateDefaultHotkeys()
+            Zoom = ConfigurationManager.CloneZoomSettings(_selected.Zoom),
+            Sequences = clonedSequences,
+            Hotkeys = clonedHotkeys
         };
         _config.Profiles.Add(copy);
         _config.SaveAll();

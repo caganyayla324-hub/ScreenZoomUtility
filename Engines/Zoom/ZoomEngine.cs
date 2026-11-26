@@ -23,6 +23,9 @@ public sealed class ZoomEngine : IZoomEngine
     private double _currentCenterY;
     private int _lastCursorX;
     private int _lastCursorY;
+    private float _lastAppliedMag = 1.0f;
+    private int _lastAppliedX;
+    private int _lastAppliedY;
     private bool _disposed;
 
     public bool IsInitialized => _isInitialized;
@@ -197,10 +200,19 @@ public sealed class ZoomEngine : IZoomEngine
 
     public void EmergencyReset()
     {
+        if (!_updateTimer.Dispatcher.CheckAccess())
+        {
+            _updateTimer.Dispatcher.Invoke(EmergencyReset);
+            return;
+        }
+
         _updateTimer.Stop();
         _isZoomActive = false;
         _targetMultiplier = 1.0;
         _currentMultiplier = 1.0;
+        _lastAppliedMag = 1.0f;
+        _lastAppliedX = 0;
+        _lastAppliedY = 0;
 
         if (_isInitialized)
         {
@@ -333,7 +345,15 @@ public sealed class ZoomEngine : IZoomEngine
             yOffset = Math.Clamp(yOffset, 0, Math.Max(0, screenH - viewHeight));
         }
 
-        NativeMethods.MagSetFullscreenTransform(mag, (int)Math.Round(xOffset), (int)Math.Round(yOffset));
+        var rx = (int)Math.Round(xOffset);
+        var ry = (int)Math.Round(yOffset);
+        if (Math.Abs(mag - _lastAppliedMag) > 0.0005f || rx != _lastAppliedX || ry != _lastAppliedY)
+        {
+            NativeMethods.MagSetFullscreenTransform(mag, rx, ry);
+            _lastAppliedMag = mag;
+            _lastAppliedX = rx;
+            _lastAppliedY = ry;
+        }
     }
 
     private void ApplyIdentityTransform()
@@ -342,6 +362,9 @@ public sealed class ZoomEngine : IZoomEngine
         _currentMultiplier = 1.0;
         _targetMultiplier = 1.0;
         _isZoomActive = false;
+        _lastAppliedMag = 1.0f;
+        _lastAppliedX = 0;
+        _lastAppliedY = 0;
 
         if (_isInitialized)
         {

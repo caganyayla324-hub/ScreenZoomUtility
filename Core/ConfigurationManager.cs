@@ -22,10 +22,17 @@ public class ConfigurationManager
 
     public event Action? ConfigurationChanged;
 
-    public ConfigurationManager()
+    public ConfigurationManager(string? configDirectory = null)
     {
-        var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        ConfigDirectory = Path.Combine(appData, "ScreenZoomUtility");
+        if (!string.IsNullOrWhiteSpace(configDirectory))
+        {
+            ConfigDirectory = configDirectory;
+        }
+        else
+        {
+            var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            ConfigDirectory = Path.Combine(appData, "ScreenZoomUtility");
+        }
         Directory.CreateDirectory(ConfigDirectory);
     }
 
@@ -88,6 +95,7 @@ public class ConfigurationManager
         foreach (var profile in Profiles)
         {
             EnsureDefaultHotkeys(profile.Hotkeys);
+            EnsureSequenceHotkeys(profile);
         }
 
         SaveAll();
@@ -138,7 +146,27 @@ public class ConfigurationManager
         }
     }
 
-    private static ZoomSettings CloneZoomSettings(ZoomSettings src) => new()
+    private static void EnsureSequenceHotkeys(UtilityProfile profile)
+    {
+        foreach (var seq in profile.Sequences)
+        {
+            if (profile.Hotkeys.All(h => h.TargetSequenceId != seq.Id))
+            {
+                profile.Hotkeys.Add(new HotkeyBinding
+                {
+                    Id = $"seq.{seq.Id}",
+                    ActionName = $"Run Sequence: {seq.Name}",
+                    Category = "Keyboard Sequence",
+                    Enabled = false,
+                    VirtualKey = 0,
+                    KeyDisplay = string.Empty,
+                    TargetSequenceId = seq.Id
+                });
+            }
+        }
+    }
+
+    public static ZoomSettings CloneZoomSettings(ZoomSettings src) => new()
     {
         Enabled = src.Enabled,
         DefaultMultiplier = src.DefaultMultiplier,
