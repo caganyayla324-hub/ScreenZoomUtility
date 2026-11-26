@@ -1,0 +1,81 @@
+<UserControl x:Class="ScreenZoomUtility.UI.Views.HotkeyManagerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel>
+        <!-- Conflict Warning Banner -->
+        <Border x:Name="ConflictBanner" DockPanel.Dock="Top" Visibility="Collapsed" Background="#3B230B" BorderBrush="{StaticResource WarningBrush}" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,12">
+            <StackPanel>
+                <TextBlock Text="Shortcut Conflicts / Registration Warnings" FontWeight="Bold" Foreground="#FDE68A" />
+                <TextBlock x:Name="ConflictDetailsText" TextWrapping="Wrap" Foreground="#FEF3C7" Margin="0,4,0,0" FontSize="12" />
+            </StackPanel>
+        </Border>
+
+        <!-- Bottom Editor Bar -->
+        <Border DockPanel.Dock="Bottom" Style="{StaticResource CardStyle}" Margin="0,12,0,0">
+            <StackPanel>
+                <TextBlock Text="Edit Selected Shortcut" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,8" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <CheckBox x:Name="HkEnabledCheck" Content="Enabled" Margin="0,0,14,0" />
+                        <CheckBox x:Name="HkCtrlCheck" Content="Ctrl" Margin="0,0,10,0" />
+                        <CheckBox x:Name="HkAltCheck" Content="Alt" Margin="0,0,10,0" />
+                        <CheckBox x:Name="HkShiftCheck" Content="Shift" Margin="0,0,10,0" />
+                        <CheckBox x:Name="HkWinCheck" Content="Win" Margin="0,0,14,0" />
+                        <TextBox x:Name="HkKeyCaptureBox" Width="130" IsReadOnly="True" PreviewKeyDown="OnCaptureKeyDown" Text="Press key..." />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <Button Content="Apply" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0" Click="OnApplyHotkeyClick" />
+                        <Button Content="Clear" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,8,0" Click="OnClearHotkeyClick" />
+                        <Button Content="Reset Defaults" Style="{StaticResource SecondaryButtonStyle}" Click="OnResetDefaultsClick" />
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- Hotkey Table -->
+        <Border Style="{StaticResource CardStyle}" Margin="0">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Text="Global Shortcuts (Active Profile)" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,10" />
+                <ListBox x:Name="HotkeysList" SelectionChanged="OnHotkeySelected">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="6,5">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="260" />
+                                    <ColumnDefinition Width="180" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{Binding Category}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="{Binding ActionName}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                <Border Grid.Column="2" Padding="8,3" CornerRadius="5" Background="{StaticResource BgSecondaryBrush}" BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="1" HorizontalAlignment="Left">
+                                    <TextBlock Text="{Binding FormattedShortcut}" FontFamily="Consolas" FontSize="12" Foreground="{StaticResource AccentBrush}" />
+                                </Border>
+                                <TextBlock Grid.Column="3" VerticalAlignment="Center" FontSize="12">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="Disabled" />
+                                            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Enabled}" Value="True">
+                                                    <Setter Property="Text" Value="Active" />
+                                                    <Setter Property="Foreground" Value="{StaticResource SuccessBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+    </DockPanel>
+</UserControl>
