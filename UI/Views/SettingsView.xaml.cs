@@ -46,7 +46,7 @@ public partial class SettingsView : UserControl
             _config.Settings.Safety.MaxSequenceDurationMs = Math.Clamp(maxDur, 500, 300000);
 
         if (int.TryParse(MinDelayBox.Text, out var minDel))
-            _config.Settings.Safety.MinStepDelayMs = Math.Clamp(minDel, 10, 5000);
+            _config.Settings.Safety.MinStepDelayMs = Math.Clamp(minDel, 0, 5000);
 
         if (int.TryParse(MaxDelayBox.Text, out var maxDel))
             _config.Settings.Safety.MaxStepDelayMs = Math.Clamp(maxDel, _config.Settings.Safety.MinStepDelayMs, 300000);
@@ -54,8 +54,13 @@ public partial class SettingsView : UserControl
         if (int.TryParse(CooldownBox.Text, out var cd))
             _config.Settings.Safety.ExecutionCooldownMs = Math.Clamp(cd, 0, 10000);
 
-        if (double.TryParse(MaxZoomBox.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out var maxZoom))
-            _config.Settings.Zoom.MaxMultiplier = Math.Clamp(maxZoom, 2.0, 16.0);
+        var normalizedMaxZoom = MaxZoomBox.Text.Trim().Replace(',', '.');
+        if (double.TryParse(normalizedMaxZoom, NumberStyles.Float, CultureInfo.InvariantCulture, out var maxZoom))
+        {
+            var clamped = Math.Clamp(maxZoom, 2.0, 16.0);
+            _config.Settings.Zoom.MaxMultiplier = clamped;
+            _config.ActiveProfile.Zoom.MaxMultiplier = clamped;
+        }
 
         _config.Settings.KeyboardModuleEnabled = KeyboardEnabledCheck.IsChecked == true;
         _config.Settings.Safety.PreventSimultaneousSequences = PreventSimultaneousCheck.IsChecked == true;

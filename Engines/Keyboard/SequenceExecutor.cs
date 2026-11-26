@@ -56,8 +56,15 @@ public sealed class SequenceExecutor : IDisposable
 
                 var step = sequence.Steps[i];
                 StepProgress?.Invoke(i + 1, sequence.Steps.Count, $"{step.Label} ({step.ShortcutSummary})");
-                SendKeyStep(step);
-                ExecutionLog?.Invoke($"  Step {i + 1}/{sequence.Steps.Count}: {step.ShortcutSummary} (wait {step.DelayAfterMs} ms)");
+                var (sent, expected) = SendKeyStep(step);
+                if (sent < expected)
+                {
+                    ExecutionLog?.Invoke($"  [Warning] Step {i + 1}: Only {sent}/{expected} input event(s) delivered (target window may be elevated/UIPI-protected).");
+                }
+                else
+                {
+                    ExecutionLog?.Invoke($"  Step {i + 1}/{sequence.Steps.Count}: {step.ShortcutSummary} (wait {step.DelayAfterMs} ms)");
+                }
 
                 if (step.DelayAfterMs > 0)
                 {
@@ -80,6 +87,14 @@ public sealed class SequenceExecutor : IDisposable
         }
         finally
         {
+            lock (_lock)
+            {
+                if (ReferenceEquals(_activeCts, cts))
+                {
+                    _activeCts.Dispose();
+                    _activeCts = null;
+                }
+            }
             StepProgress?.Invoke(0, 0, string.Empty);
             _safety.MarkSequenceEnded();
         }
@@ -93,7 +108,7 @@ public sealed class SequenceExecutor : IDisposable
         }
     }
 
-    private static void SendKeyStep(SequenceStep step)
+    private static (uint Sent, uint Expected) SendKeyStep(SequenceStep step)
     {
         var inputs = new List<NativeMethods.INPUT>();
 
@@ -111,7 +126,8 @@ public sealed class SequenceExecutor : IDisposable
         if (step.Ctrl) inputs.Add(CreateKeyInput(0x11, true));
 
         var arr = inputs.ToArray();
-        NativeMethods.SendInput((uint)arr.Length, arr, Marshal.SizeOf<NativeMethods.INPUT>());
+        var sent = NativeMethods.SendInput((uint)arr.Length, arr, Marshal.SizeOf<NativeMethods.INPUT>());
+        return (sent, (uint)arr.Length);
     }
 
     private static NativeMethods.INPUT CreateKeyInput(ushort vk, bool keyUp)

@@ -124,43 +124,50 @@ public partial class MainWindow : Window
 
     private async void OnGlobalHotkeyPressed(HotkeyBinding binding)
     {
-        switch (binding.Id)
+        try
         {
-            case "safety.emergency_stop":
-                _safety.TriggerEmergencyStop("Emergency Stop Hotkey");
-                break;
-            case "zoom.toggle":
-                _zoom.Toggle();
-                break;
-            case "zoom.activate":
-                _zoom.Activate();
-                break;
-            case "zoom.deactivate":
-                _zoom.Deactivate();
-                break;
-            case "zoom.increase":
-                _zoom.IncreaseZoom();
-                break;
-            case "zoom.decrease":
-                _zoom.DecreaseZoom();
-                break;
-            case "zoom.reset":
-                _zoom.ResetZoom();
-                break;
-            case "zoom.next_profile":
-                _config.SwitchToNextProfile();
-                OnProfileChanged();
-                break;
-            default:
-                if (!string.IsNullOrWhiteSpace(binding.TargetSequenceId))
-                {
-                    var seq = _config.ActiveProfile.Sequences.FirstOrDefault(s => s.Id == binding.TargetSequenceId);
-                    if (seq != null && seq.Enabled)
+            switch (binding.Id)
+            {
+                case "safety.emergency_stop":
+                    _safety.TriggerEmergencyStop("Emergency Stop Hotkey");
+                    break;
+                case "zoom.toggle":
+                    _zoom.Toggle();
+                    break;
+                case "zoom.activate":
+                    _zoom.Activate();
+                    break;
+                case "zoom.deactivate":
+                    _zoom.Deactivate();
+                    break;
+                case "zoom.increase":
+                    _zoom.IncreaseZoom();
+                    break;
+                case "zoom.decrease":
+                    _zoom.DecreaseZoom();
+                    break;
+                case "zoom.reset":
+                    _zoom.ResetZoom();
+                    break;
+                case "zoom.next_profile":
+                    _config.SwitchToNextProfile();
+                    OnProfileChanged();
+                    break;
+                default:
+                    if (!string.IsNullOrWhiteSpace(binding.TargetSequenceId))
                     {
-                        await _executor.ExecuteAsync(seq);
+                        var seq = _config.ActiveProfile.Sequences.FirstOrDefault(s => s.Id == binding.TargetSequenceId);
+                        if (seq != null && seq.Enabled)
+                        {
+                            await _executor.ExecuteAsync(seq);
+                        }
                     }
-                }
-                break;
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            _safety.TriggerEmergencyStop($"Hotkey error: {ex.Message}");
         }
     }
 

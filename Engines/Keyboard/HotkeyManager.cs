@@ -53,10 +53,18 @@ public sealed class HotkeyManager : IDisposable
 
         if (_windowHandle == IntPtr.Zero) return;
 
+        var seenSignatures = new HashSet<string>();
+
         foreach (var binding in bindings)
         {
             if (!binding.Enabled || binding.VirtualKey <= 0)
                 continue;
+
+            if (!seenSignatures.Add(binding.Signature))
+            {
+                _registrationErrors[binding.Id] = $"Duplicate shortcut [{binding.FormattedShortcut}] skipped for '{binding.ActionName}'.";
+                continue;
+            }
 
             uint mods = NativeMethods.MOD_NOREPEAT;
             if (binding.Ctrl) mods |= NativeMethods.MOD_CONTROL;
@@ -88,6 +96,7 @@ public sealed class HotkeyManager : IDisposable
         }
 
         _registeredByAtom.Clear();
+        _nextId = 1000;
     }
 
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)

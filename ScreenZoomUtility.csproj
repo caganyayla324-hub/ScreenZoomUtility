@@ -12,6 +12,7 @@
     <Version>1.0.0</Version>
     <Product>Advanced Windows Screen Zoom &amp; Keyboard Utility</Product>
     <Description>Standalone Windows accessibility and productivity utility for full-screen magnification and keyboard sequences.</Description>
+    <DefaultItemExcludes>$(DefaultItemExcludes);tests\**</DefaultItemExcludes>
   </PropertyGroup>
 
 </Project>

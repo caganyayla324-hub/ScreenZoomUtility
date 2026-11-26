@@ -92,7 +92,8 @@ public partial class ScreenZoomView : UserControl
     private void OnApplyCustomClick(object sender, RoutedEventArgs e)
     {
         CustomValidationText.Text = string.Empty;
-        if (!double.TryParse(CustomZoomBox.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out var val))
+        var normalized = CustomZoomBox.Text.Trim().Replace(',', '.');
+        if (!double.TryParse(normalized, NumberStyles.Float, CultureInfo.InvariantCulture, out var val))
         {
             CustomValidationText.Text = "Enter a valid number (e.g. 2.5).";
             return;
